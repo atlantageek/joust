@@ -18,59 +18,80 @@ window.onload = function () {
 },{"./states/boot":6,"./states/gameover":7,"./states/menu":8,"./states/play":9,"./states/preload":10}],2:[function(require,module,exports){
 'use strict';
 
-var Platform = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'platform', frame);
-  this.anchor.setTo(0,0.5);
-  this.game.physics.enable(this);
-  this.body.velocity.y=-100;
+var Catapult = function(game, x, y, frame) {
+  Phaser.Sprite.call(this, game, x, y, 'catapult', frame);
+  this.animations.add('pulse');
+  this.animations.add('fire',[1,4,7], 4, false);
+  this.animations.add('clear',[1], 4, false);
 
   // initialize your prefab here
-  this.checkWorldBounds = true;
-  this.outOfBoundsKill = true;
-  this.body.immovable = true;
   
 };
 
-Platform.prototype = Object.create(Phaser.Sprite.prototype);
-Platform.prototype.constructor = Platform;
+Catapult.prototype = Object.create(Phaser.Sprite.prototype);
+Catapult.prototype.constructor = Catapult;
 
-Platform.prototype.update = function() {
-  this.body.velocity.x = -100;
+Catapult.prototype.update = function() {
+  if ((( this.x - this.game.camera.x) < 650)
+   && (( this.x - this.game.camera.x) > 300))
+  {
+    this.fire();
+  }
+  console.log(  " XXX" + (this.x - this.game.camera.x) );
   
   // write your prefab's specific update code here
   
 };
 
-module.exports = Platform;
+Catapult.prototype.fire = function() {
+  this.play('fire',false);
+};
+
+
+module.exports = Catapult;
 
 },{}],3:[function(require,module,exports){
 'use strict';
 
-var Platform = require('./platform');
+var Plasma = function(game, x, y, frame) {
+  Phaser.Sprite.call(this, game, x, y, 'plasma', frame);
+  this.animations.add('pulse');
+  this.catapult = nil;
 
-var PlatformGroup = function(game, parent) {  
-  Phaser.Group.call(this, game, parent);
+  // initialize your prefab here
+  
 };
 
-PlatformGroup.prototype = Object.create(Phaser.Group.prototype);  
-PlatformGroup.prototype.constructor = PlatformGroup;
+Plasma.prototype = Object.create(Phaser.Sprite.prototype);
+Plasma.prototype.constructor = Plasma;
 
-module.exports = PlatformGroup;
+Plasma.prototype.update = function() {
+  
+  // write your prefab's specific update code here
+  this.play('pulse',true);
+  this.scale.x = 0.2;
+  this.scale.y = 0.2;
+  
+};
 
-},{"./platform":2}],4:[function(require,module,exports){
+module.exports = Plasma;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var Pteradactyl = function(game, x, y, frame) {
-  Phaser.Sprite.call(this, game, x, y, 'pteradactyl', frame);
+  Phaser.Sprite.call(this, game, x, y, 'pterodactyl', frame);
 
   // initialize your prefab here
-  this.anchor.setTo(0.5,0.5);
+  this.anchor.setTo(0.5,0);
   this.game.physics.enable(this);
   this.body.gravity.y=0;
+  this.concoon_launch_anim = this.animations.add('concoon-launch',[3,4,5], 5, false);
+  this.animations.add('concoon',[3,4], 5, true);
   this.animations.add('pterfly',[0,1,2], 5, true);
-  this.animations.play('pterfly');
-  this.body.velocity.x = -150;
-
+  this.animations.play('concoon');
+  this.launch_flag = false;
+  this.body.setSize(60,30,0,0);
   // initialize your prefab here
   
 };
@@ -79,14 +100,46 @@ Pteradactyl.prototype = Object.create(Phaser.Sprite.prototype);
 Pteradactyl.prototype.constructor = Pteradactyl;
 
 Pteradactyl.prototype.update = function() {
-  if (this.x < -1 * this.width )
+  if (this.x < this.game.camera.x + 700)
   {
-    this.x = this.game.width;
+      this.body.velocity.x = -150;
   }
+  //if (this.x < -1 * this.width )
+  //{
+  //  this.x = this.game.width + this.game.camera.x;
+  //  console.log("PTER: " + this.x);
+  //}
   
   // write your prefab's specific update code here
   
 };
+function change_to_fly(target) {
+  target.launch_flag = true;
+  target.loadTexture('pterodactyl-short');
+  target.crop(Phaser.Rectangle(0,0,30,60));
+  target.animations.play('pterfly');
+  console.log("Hey");
+
+}
+Pteradactyl.prototype.follow = function(target) {
+  if ((this.x < this.game.camera.x + 740) && !this.launch_flag)
+  {
+    this.anim = this.animations.play('concoon-launch');
+    this.concoon_launch_anim.onComplete.add(change_to_fly, this);
+    this.body.velocity.y = 100;
+  }
+  if ((this.x < this.game.camera.x + 700) && this.launch_flag)
+  {
+      if (this.y > target )
+      {
+          this.body.velocity.y = -30;
+      }
+      if (this.y < target )
+      {
+          this.body.velocity.y = 150;
+      }
+  }
+}
 
 module.exports = Pteradactyl;
 
@@ -125,19 +178,10 @@ Swan.prototype.constructor = Swan;
 Swan.prototype.update = function() {
   
   // write your prefab's specific update code here
-      if (this.x < this.game.width/2 )
-      {
-        this.body.velocity.x = 100;
-      }
-      if (this.x >= this.game.width/2 )
-      {
-        this.body.velocity.x = 0;
-      }
       var fade_level = this.flap_energy / 500.0 + 0.25;
       if (fade_level > 1) {fade_level = 1;}
         console.log("fading");
       this.game.add.tween(this).to( { alpha: fade_level }, 100, Phaser.Easing.Linear.None, true, 0, 1000, true);
-
   
 };
 
@@ -225,73 +269,92 @@ module.exports = Menu;
   'use strict';
 
   var Swan = require('../prefabs/swan');
-  var Platform = require('../prefabs/platform');
-  var PlatformGroup = require('../prefabs/platform_group');
+  var  Plasma= require('../prefabs/plasma');
+  var  Catapult= require('../prefabs/catapult');
+  
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
   Play.prototype = {
     create: function() {
-
+      
     var style = { font: "25px Arial", fill: "#ff0044", align: "center" };
 
       this.game.score = 0;
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
-      this.platform_group = this.game.add.group();
       this.flap_energy = 100;
-      this.flap_energy_txt = this.game.add.text(200, 0, "Text", style);
+      this.flap_energy_txt = this.game.add.text(30,this.game.height - 30 , "Text", style);
+      this.flap_energy_txt.fixedToCamera = true;
 
-      this.swan = new Swan(this.game, this.game.width/2, this.game.height/2);
-      this.pter = new Pteradactyl(this.game, this.game.width, this.game.height/2);
+
+
+      //tilemap
+      this.map = this.game.add.tilemap('cave');
+      this.map.addTilesetImage('tiles');
+      this.layer = this.map.createLayer('Tile Layer 1');
+      this.layer.resizeWorld();
+      this.map.setCollisionBetween(1,16);
+
+    //Sprites
+      this.swan = new Swan(this.game, this.game.width/2, 50);
+      this.plasma_group = this.game.add.group();
+      this.pter = this.game.add.group();
+      this.game.physics.enable(this.plasma_group);
+      this.catapult_group = this.game.add.group();
+      var pter_list = [1100,1200,1500,1800,2000,2400,2500,3300,3350,3400,4000,4100,4200,4500,5000,5500,5600,5700,5800,6000];
+      var catapult_list = [870,2160,2460];
+      for (var i=0;i<pter_list.length;i++)
+      {
+        this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
+        
+        //this.pter.animations.play('pterfly');
+      }
+      for (var i=0;i<catapult_list.length;i++)
+      {
+        var catapult = new Catapult(this.game, catapult_list[i], 490);
+        catapult.events.onAnimationComplete.add(function(target) {
+          var plasma = this.launch_plasma(target.x , target.y);
+          plasma.catapult = catapult;
+          target.frame = 1;
+         }, this);
+      
+        this.catapult_group.add( catapult);
+        
+      }
       this.game.add.existing(this.swan);
-      this.pter.animations.play('pterfly');
       this.game.add.existing(this.pter);
-      //this.ground = this.game.add.sprite(0, 500, 'ground');
-      //this.game.physics.enable(this.ground);
-      //this.ground.body.immovable = true;
+      this.game.add.existing(this.catapult_group);
+      this.game.add.existing(this.plasma_group);
       this.swan.body.gravity.y=300;
-      //this.swan.body.velocity.x = 100;
+      this.game.physics.enable(this.swan);
+      //this.game.camera.follow(this.swan);
+
       //Setup Animations
     this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
     var space_key = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     space_key.onDown.add(this.swan.jump, this.swan);
-           //this.swan.animations.play('walk');
-
-      this.platformGenerator = this.game.time.events.loop(
-		Phaser.Timer.SECOND * 5, this.generatePlatform, this);
-      
-      this.platformGenerator = this.game.time.events.loop(
-		Phaser.Timer.SECOND , this.updateScore, this);
+           this.swan.animations.play('flap');
 
       
     },
     updateScore: function() {
-      this.game.score += 1;
-    },
-    generatePlatform: function() {
-      var x = this.game.width;
-      var y = this.game.rnd.integerInRange(50,400);
-      var platform = this.platform_group.getFirstExists(false);
-      if (!platform)
-      {
-          var platform = new Platform(this.game,x,y);
-          this.platform_group.add(platform);
-      }
-      platform.reset(x,y);
-      var scale= (1.5 + this.game.rnd.normal()) * 100;
-      console.log(scale);
-      platform.width = scale;
+      this.game.score = this.game.camera.x;
     },
     update: function() {
-      //this.game.physics.arcade.collide(this.swan, this.ground);
-      this.game.physics.arcade.collide(this.pter, this.platform_group);
-      this.game.physics.arcade.collide(this.swan, this.platform_group);
+      this.swan.body.velocity.x=40;
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
+      this.game.camera.x = this.swan.x- 200;
+      this.updateScore();
+      if (this.swan.flap_energy > 0)
+      {
+         this.game.physics.arcade.collide(this.swan, this.layer);
+      }
+       this.game.physics.arcade.collide(this.pter, this.layer);
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
         console.log("dying");
       }
-      else if (this.swan.body.wasTouching.down)
+      else if (this.swan.body.blocked.down)
       {
          this.swan.flap_energy += 1
 	 if (this.swan.animations.currentAnim.name != "walk")
@@ -309,17 +372,14 @@ module.exports = Menu;
          }
       }
       this.flap_energy_txt.text = "Energy: " + this.swan.flap_energy + " Score: " + this.game.score;
-      if (this.pter.y > this.swan.y )
-      {
-          this.pter.body.velocity.y = -30;
-      }
-      if (this.pter.y < this.swan.y )
-      {
-          this.pter.body.velocity.y = 40;
-      }
+      this.pter.callAll('follow',null, this.swan.y);
       if (this.swan.y > 700)
       {
-      this.game.state.start('gameover');
+      this.game.state.start('gameover',true,true);
+      }
+      if (this.swan.x > 7000)
+      {
+      this.game.state.start('gameover',true,true);
       }
 
 
@@ -329,13 +389,42 @@ module.exports = Menu;
       pter.body.velocity.x = -100;
       
     }, 
+    launch_plasma: function(x,y)
+    {
+      var plasma = this.plasma_group.create(x,y,'plasma');
+      this.game.physics.enable(plasma);
+    
+      plasma.scale.x=0.1;
+      plasma.scale.y=0.1;
+      plasma.lifespan=3000;
+      plasma.body.gravity.y=200;
+      plasma.body.velocity.x=(this.swan.x-x);
+      plasma.body.velocity.y=(this.swan.y-y);
+      plasma.events.onKilled.add(function() {
+      }, plasma);
+      return plasma;
+    
+    },
+    swan_layer_collide: function(swan, pter) {
+           console.log(swan.body.blocked);
+      if (swan.body.blocked.down)
+      {
+         swan.flap_energy += 1
+	 if (swan.animations.currentAnim.name != "walk")
+         {
+           console.log("Walk");
+           swan.animations.play('walk');
+         }
+      }
+      
+    }, 
     clickListener: function() {
     }
   };
   
   module.exports = Play;
 
-},{"../prefabs/platform":2,"../prefabs/platform_group":3,"../prefabs/pteradactyl":4,"../prefabs/swan":5}],10:[function(require,module,exports){
+},{"../prefabs/catapult":2,"../prefabs/plasma":3,"../prefabs/pteradactyl":4,"../prefabs/swan":5}],10:[function(require,module,exports){
 
 'use strict';
 function Preload() {
@@ -352,9 +441,17 @@ Preload.prototype = {
     this.load.setPreloadSprite(this.asset);
     this.load.image('yeoman', 'assets/yeoman-logo.png');
     this.load.spritesheet('swan', 'assets/swan.png',45,45);
+    this.load.spritesheet('pterodactyl', 'assets/pterodactyl.png',60,65);
+    this.load.spritesheet('catapult', 'assets/cannon.png',50,60);
+    this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
-    this.load.spritesheet('pteradactyl', 'assets/pterodactyl.png',64, 30);
+    this.game.load.tilemap('cave', 'assets/tilemaps/maps/world.json', null, 
+      Phaser.Tilemap.TILED_JSON);
+    this.game.load.image('tiles', 'assets/tilemaps/tiles/tileset.png');
+
+
+    this.load.spritesheet('plasma', 'assets/plasmaball.png', 128, 128);
 
   },
   create: function() {
