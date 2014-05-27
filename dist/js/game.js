@@ -217,19 +217,18 @@ GameOver.prototype = {
   },
   create: function () {
     var style = { font: '65px Arial', fill: '#ffffff', align: 'center'};
-    this.titleText = this.game.add.text(this.game.world.centerX,100, 'Game Over!', style);
+    this.titleText = this.game.add.text(400,100, 'Game Over!', style);
     this.titleText.anchor.setTo(0.5, 0.5);
 
-    this.congratsText = this.game.add.text(this.game.world.centerX, 200, 'Score is ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
+    this.congratsText = this.game.add.text(400, 200, 'Score is ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
     this.congratsText.anchor.setTo(0.5, 0.5);
 
-    this.instructionText = this.game.add.text(this.game.world.centerX, 300, 'Click To Play Again', { font: '16px Arial', fill: '#ffffff', align: 'center'});
+    this.instructionText = this.game.add.text(400, 300, 'Click To Play Again', { font: '16px Arial', fill: '#ffffff', align: 'center'});
     this.instructionText.anchor.setTo(0.5, 0.5);
+    console.log("Create gameover");
   },
   update: function () {
-    if(this.game.input.activePointer.justPressed()) {
-      this.game.state.start('play');
-    }
+    console.log("Update");
   }
 };
 module.exports = GameOver;
@@ -342,13 +341,14 @@ module.exports = Menu;
     update: function() {
       this.swan.body.velocity.x=40;
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
+      this.game.physics.arcade.collide(this.swan, this.plasma_group, this.plasma_swan_collide);
       this.game.camera.x = this.swan.x- 200;
       this.updateScore();
       if (this.swan.flap_energy > 0)
       {
          this.game.physics.arcade.collide(this.swan, this.layer);
       }
-       this.game.physics.arcade.collide(this.pter, this.layer);
+      this.game.physics.arcade.collide(this.pter, this.layer);
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
@@ -387,7 +387,9 @@ module.exports = Menu;
     pter_swan_collide: function(swan, pter) {
       swan.flap_energy -= 5;
       pter.body.velocity.x = -100;
-      
+    }, 
+    plasma_swan_collide: function(swan, pter) {
+      swan.flap_energy -= 5;
     }, 
     launch_plasma: function(x,y)
     {

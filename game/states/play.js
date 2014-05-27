@@ -75,13 +75,14 @@
     update: function() {
       this.swan.body.velocity.x=40;
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
+      this.game.physics.arcade.collide(this.swan, this.plasma_group, this.plasma_swan_collide);
       this.game.camera.x = this.swan.x- 200;
       this.updateScore();
       if (this.swan.flap_energy > 0)
       {
          this.game.physics.arcade.collide(this.swan, this.layer);
       }
-       this.game.physics.arcade.collide(this.pter, this.layer);
+      this.game.physics.arcade.collide(this.pter, this.layer);
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
@@ -120,7 +121,9 @@
     pter_swan_collide: function(swan, pter) {
       swan.flap_energy -= 5;
       pter.body.velocity.x = -100;
-      
+    }, 
+    plasma_swan_collide: function(swan, pter) {
+      swan.flap_energy -= 5;
     }, 
     launch_plasma: function(x,y)
     {
