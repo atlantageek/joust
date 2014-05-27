@@ -21,8 +21,8 @@ window.onload = function () {
 var Catapult = function(game, x, y, frame) {
   Phaser.Sprite.call(this, game, x, y, 'catapult', frame);
   this.animations.add('pulse');
-  this.animations.add('fire',[1,4,7], 4, false);
-  this.animations.add('clear',[1], 4, false);
+  this.fired=false;
+  this.animations.add('fire',[2,1,0], 4, false);
 
   // initialize your prefab here
   
@@ -32,19 +32,22 @@ Catapult.prototype = Object.create(Phaser.Sprite.prototype);
 Catapult.prototype.constructor = Catapult;
 
 Catapult.prototype.update = function() {
-  if ((( this.x - this.game.camera.x) < 650)
-   && (( this.x - this.game.camera.x) > 300))
+  if (( this.x - this.game.camera.x) < 450)
   {
     this.fire();
   }
-  console.log(  " XXX" + (this.x - this.game.camera.x) );
+  console.log( this.x - this.game.camera.x) ;
   
   // write your prefab's specific update code here
   
 };
 
 Catapult.prototype.fire = function() {
-  this.play('fire',false);
+  if (!this.fired)
+  {
+    this.play('fire',false);
+    this.fired = true;
+  }
 };
 
 
@@ -56,7 +59,6 @@ module.exports = Catapult;
 var Plasma = function(game, x, y, frame) {
   Phaser.Sprite.call(this, game, x, y, 'plasma', frame);
   this.animations.add('pulse');
-  this.catapult = nil;
 
   // initialize your prefab here
   
@@ -217,18 +219,19 @@ GameOver.prototype = {
   },
   create: function () {
     var style = { font: '65px Arial', fill: '#ffffff', align: 'center'};
-    this.titleText = this.game.add.text(400,100, 'Game Over!', style);
+    this.titleText = this.game.add.text(this.game.world.centerX,100, 'Game Over!', style);
     this.titleText.anchor.setTo(0.5, 0.5);
 
-    this.congratsText = this.game.add.text(400, 200, 'Score is ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
+    this.congratsText = this.game.add.text(this.game.world.centerX, 200, 'Score is ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
     this.congratsText.anchor.setTo(0.5, 0.5);
 
-    this.instructionText = this.game.add.text(400, 300, 'Click To Play Again', { font: '16px Arial', fill: '#ffffff', align: 'center'});
+    this.instructionText = this.game.add.text(this.game.world.centerX, 300, 'Click To Play Again', { font: '16px Arial', fill: '#ffffff', align: 'center'});
     this.instructionText.anchor.setTo(0.5, 0.5);
-    console.log("Create gameover");
   },
   update: function () {
-    console.log("Update");
+    if(this.game.input.activePointer.justPressed()) {
+      this.game.state.start('play');
+    }
   }
 };
 module.exports = GameOver;
@@ -309,11 +312,9 @@ module.exports = Menu;
       }
       for (var i=0;i<catapult_list.length;i++)
       {
-        var catapult = new Catapult(this.game, catapult_list[i], 490);
+        var catapult = new Catapult(this.game, catapult_list[i], 500);
         catapult.events.onAnimationComplete.add(function(target) {
-          var plasma = this.launch_plasma(target.x , target.y);
-          plasma.catapult = catapult;
-          target.frame = 1;
+          this.launch_plasma(target.x + 30, target.y);
          }, this);
       
         this.catapult_group.add( catapult);
@@ -341,14 +342,13 @@ module.exports = Menu;
     update: function() {
       this.swan.body.velocity.x=40;
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
-      this.game.physics.arcade.collide(this.swan, this.plasma_group, this.plasma_swan_collide);
       this.game.camera.x = this.swan.x- 200;
       this.updateScore();
       if (this.swan.flap_energy > 0)
       {
          this.game.physics.arcade.collide(this.swan, this.layer);
       }
-      this.game.physics.arcade.collide(this.pter, this.layer);
+       this.game.physics.arcade.collide(this.pter, this.layer);
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
@@ -375,11 +375,11 @@ module.exports = Menu;
       this.pter.callAll('follow',null, this.swan.y);
       if (this.swan.y > 700)
       {
-      this.game.state.start('gameover',true,true);
+      this.game.state.start('gameover');
       }
       if (this.swan.x > 7000)
       {
-      this.game.state.start('gameover',true,true);
+      this.game.state.start('gameover');
       }
 
 
@@ -387,9 +387,7 @@ module.exports = Menu;
     pter_swan_collide: function(swan, pter) {
       swan.flap_energy -= 5;
       pter.body.velocity.x = -100;
-    }, 
-    plasma_swan_collide: function(swan, pter) {
-      swan.flap_energy -= 5;
+      
     }, 
     launch_plasma: function(x,y)
     {
@@ -398,14 +396,12 @@ module.exports = Menu;
     
       plasma.scale.x=0.1;
       plasma.scale.y=0.1;
-      plasma.lifespan=3000;
-      plasma.body.gravity.y=200;
-      plasma.body.velocity.x=(this.swan.x-x);
-      plasma.body.velocity.y=(this.swan.y-y);
-      plasma.events.onKilled.add(function() {
-      }, plasma);
-      return plasma;
+      plasma.lifespan=2000;
+      plasma.body.gravity.y=100;
+      plasma.body.velocity.x=this.swan.x-x;
+      plasma.body.velocity.y=this.swan.y-y;
     
+      console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     },
     swan_layer_collide: function(swan, pter) {
            console.log(swan.body.blocked);
@@ -444,8 +440,8 @@ Preload.prototype = {
     this.load.image('yeoman', 'assets/yeoman-logo.png');
     this.load.spritesheet('swan', 'assets/swan.png',45,45);
     this.load.spritesheet('pterodactyl', 'assets/pterodactyl.png',60,65);
-    this.load.spritesheet('catapult', 'assets/cannon.png',50,60);
-    this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
+    this.load.spritesheet('catapult', 'assets/catapult.png',74,46);
+    this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',60,30);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
     this.game.load.tilemap('cave', 'assets/tilemaps/maps/world.json', null, 
