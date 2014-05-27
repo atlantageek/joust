@@ -14,9 +14,17 @@ Preload.prototype = {
     this.load.setPreloadSprite(this.asset);
     this.load.image('yeoman', 'assets/yeoman-logo.png');
     this.load.spritesheet('swan', 'assets/swan.png',45,45);
+    this.load.spritesheet('pterodactyl', 'assets/pterodactyl.png',60,65);
+    this.load.spritesheet('catapult', 'assets/cannon.png',50,60);
+    this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
-    this.load.spritesheet('pteradactyl', 'assets/pterodactyl.png',64, 30);
+    this.game.load.tilemap('cave', 'assets/tilemaps/maps/world.json', null, 
+      Phaser.Tilemap.TILED_JSON);
+    this.game.load.image('tiles', 'assets/tilemaps/tiles/tileset.png');
+
+
+    this.load.spritesheet('plasma', 'assets/plasmaball.png', 128, 128);
 
   },
   create: function() {

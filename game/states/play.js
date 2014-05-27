@@ -2,73 +2,93 @@
   'use strict';
 
   var Swan = require('../prefabs/swan');
-  var Platform = require('../prefabs/platform');
-  var PlatformGroup = require('../prefabs/platform_group');
+  var  Plasma= require('../prefabs/plasma');
+  var  Catapult= require('../prefabs/catapult');
+  
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
   Play.prototype = {
     create: function() {
-
+      
     var style = { font: "25px Arial", fill: "#ff0044", align: "center" };
 
       this.game.score = 0;
       this.game.physics.startSystem(Phaser.Physics.ARCADE);
-      this.platform_group = this.game.add.group();
       this.flap_energy = 100;
-      this.flap_energy_txt = this.game.add.text(200, 0, "Text", style);
+      this.flap_energy_txt = this.game.add.text(30,this.game.height - 30 , "Text", style);
+      this.flap_energy_txt.fixedToCamera = true;
 
-      this.swan = new Swan(this.game, this.game.width/2, this.game.height/2);
-      this.pter = new Pteradactyl(this.game, this.game.width, this.game.height/2);
+
+
+      //tilemap
+      this.map = this.game.add.tilemap('cave');
+      this.map.addTilesetImage('tiles');
+      this.layer = this.map.createLayer('Tile Layer 1');
+      this.layer.resizeWorld();
+      this.map.setCollisionBetween(1,16);
+
+    //Sprites
+      this.swan = new Swan(this.game, this.game.width/2, 50);
+      this.plasma_group = this.game.add.group();
+      this.pter = this.game.add.group();
+      this.game.physics.enable(this.plasma_group);
+      this.catapult_group = this.game.add.group();
+      var pter_list = [1100,1200,1500,1800,2000,2400,2500,3300,3350,3400,4000,4100,4200,4500,5000,5500,5600,5700,5800,6000];
+      var catapult_list = [870,2160,2460];
+      for (var i=0;i<pter_list.length;i++)
+      {
+        this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
+        
+        //this.pter.animations.play('pterfly');
+      }
+      for (var i=0;i<catapult_list.length;i++)
+      {
+        var catapult = new Catapult(this.game, catapult_list[i], 490);
+        catapult.events.onAnimationComplete.add(function(target) {
+          var plasma = this.launch_plasma(target.x , target.y);
+          plasma.catapult = catapult;
+          target.frame = 1;
+         }, this);
+      
+        this.catapult_group.add( catapult);
+        
+      }
       this.game.add.existing(this.swan);
-      this.pter.animations.play('pterfly');
       this.game.add.existing(this.pter);
-      //this.ground = this.game.add.sprite(0, 500, 'ground');
-      //this.game.physics.enable(this.ground);
-      //this.ground.body.immovable = true;
+      this.game.add.existing(this.catapult_group);
+      this.game.add.existing(this.plasma_group);
       this.swan.body.gravity.y=300;
-      //this.swan.body.velocity.x = 100;
+      this.game.physics.enable(this.swan);
+      //this.game.camera.follow(this.swan);
+
       //Setup Animations
     this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
     var space_key = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     space_key.onDown.add(this.swan.jump, this.swan);
-           //this.swan.animations.play('walk');
-
-      this.platformGenerator = this.game.time.events.loop(
-		Phaser.Timer.SECOND * 5, this.generatePlatform, this);
-      
-      this.platformGenerator = this.game.time.events.loop(
-		Phaser.Timer.SECOND , this.updateScore, this);
+           this.swan.animations.play('flap');
 
       
     },
     updateScore: function() {
-      this.game.score += 1;
-    },
-    generatePlatform: function() {
-      var x = this.game.width;
-      var y = this.game.rnd.integerInRange(50,400);
-      var platform = this.platform_group.getFirstExists(false);
-      if (!platform)
-      {
-          var platform = new Platform(this.game,x,y);
-          this.platform_group.add(platform);
-      }
-      platform.reset(x,y);
-      var scale= (1.5 + this.game.rnd.normal()) * 100;
-      console.log(scale);
-      platform.width = scale;
+      this.game.score = this.game.camera.x;
     },
     update: function() {
-      //this.game.physics.arcade.collide(this.swan, this.ground);
-      this.game.physics.arcade.collide(this.pter, this.platform_group);
-      this.game.physics.arcade.collide(this.swan, this.platform_group);
+      this.swan.body.velocity.x=40;
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
+      this.game.physics.arcade.collide(this.swan, this.plasma_group, this.plasma_swan_collide);
+      this.game.camera.x = this.swan.x- 200;
+      this.updateScore();
+      if (this.swan.flap_energy > 0)
+      {
+         this.game.physics.arcade.collide(this.swan, this.layer);
+      }
+      this.game.physics.arcade.collide(this.pter, this.layer);
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
         console.log("dying");
       }
-      else if (this.swan.body.wasTouching.down)
+      else if (this.swan.body.blocked.down)
       {
          this.swan.flap_energy += 1
 	 if (this.swan.animations.currentAnim.name != "walk")
@@ -86,17 +106,14 @@
          }
       }
       this.flap_energy_txt.text = "Energy: " + this.swan.flap_energy + " Score: " + this.game.score;
-      if (this.pter.y > this.swan.y )
-      {
-          this.pter.body.velocity.y = -30;
-      }
-      if (this.pter.y < this.swan.y )
-      {
-          this.pter.body.velocity.y = 40;
-      }
+      this.pter.callAll('follow',null, this.swan.y);
       if (this.swan.y > 700)
       {
-      this.game.state.start('gameover');
+      this.game.state.start('gameover',true,true);
+      }
+      if (this.swan.x > 7000)
+      {
+      this.game.state.start('gameover',true,true);
       }
 
 
@@ -104,6 +121,37 @@
     pter_swan_collide: function(swan, pter) {
       swan.flap_energy -= 5;
       pter.body.velocity.x = -100;
+    }, 
+    plasma_swan_collide: function(swan, pter) {
+      swan.flap_energy -= 5;
+    }, 
+    launch_plasma: function(x,y)
+    {
+      var plasma = this.plasma_group.create(x,y,'plasma');
+      this.game.physics.enable(plasma);
+    
+      plasma.scale.x=0.1;
+      plasma.scale.y=0.1;
+      plasma.lifespan=3000;
+      plasma.body.gravity.y=200;
+      plasma.body.velocity.x=(this.swan.x-x);
+      plasma.body.velocity.y=(this.swan.y-y);
+      plasma.events.onKilled.add(function() {
+      }, plasma);
+      return plasma;
+    
+    },
+    swan_layer_collide: function(swan, pter) {
+           console.log(swan.body.blocked);
+      if (swan.body.blocked.down)
+      {
+         swan.flap_energy += 1
+	 if (swan.animations.currentAnim.name != "walk")
+         {
+           console.log("Walk");
+           swan.animations.play('walk');
+         }
+      }
       
     }, 
     clickListener: function() {
