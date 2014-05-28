@@ -223,12 +223,15 @@ GameOver.prototype = {
     this.congratsText = this.game.add.text(400, 200, 'Score is ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
     this.congratsText.anchor.setTo(0.5, 0.5);
 
-    this.instructionText = this.game.add.text(400, 300, 'Click To Play Again', { font: '16px Arial', fill: '#ffffff', align: 'center'});
+    this.instructionText = this.game.add.text(400, 300, 'Want to play Again? Click anywhere.', { font: '16px Arial', fill: '#ffffff', align: 'center'});
     this.instructionText.anchor.setTo(0.5, 0.5);
     console.log("Create gameover");
   },
   update: function () {
-    console.log("Update");
+    if(this.game.input.activePointer.justPressed()) {
+      this.game.state.start('play');
+    }
+
   }
 };
 module.exports = GameOver;
