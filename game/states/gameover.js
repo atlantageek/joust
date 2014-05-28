@@ -19,7 +19,10 @@ GameOver.prototype = {
     console.log("Create gameover");
   },
   update: function () {
-    console.log("Update");
+    if(this.game.input.activePointer.justPressed()) {
+      this.game.state.start('play');
+    }
+
   }
 };
 module.exports = GameOver;
