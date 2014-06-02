@@ -153,7 +153,7 @@ var Swan = function(game, x, y, frame) {
   this.anchor.setTo(0.5,0.5);
   this.game.physics.enable(this);
   this.body.gravity.y=300;
-  this.animations.add('flap',[5,6], 8, false);
+  this.animations.add('flap',[5,6,7], 8, false);
   this.animations.add('walk',[0,1,2,3], 10, true);
   this.animations.add('stand',[4], 10, true);
 
@@ -229,7 +229,7 @@ GameOver.prototype = {
   },
   update: function () {
     if(this.game.input.activePointer.justPressed()) {
-      this.game.state.start('play', true, true);
+      this.game.state.start('play');
     }
 
   }
@@ -277,6 +277,13 @@ module.exports = Menu;
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
   Play.prototype = {
+    shutdown: function() {
+      this.swan.destroy();
+      this.map.destroy();
+      this.plasma_group.destroy();
+      this.pter.destroy();
+      this.catapult_group.destroy();
+    },
     create: function() {
       
     var style = { font: "25px Arial", fill: "#ff0044", align: "center" };
@@ -302,8 +309,9 @@ module.exports = Menu;
       this.pter = this.game.add.group();
       this.game.physics.enable(this.plasma_group);
       this.catapult_group = this.game.add.group();
-      var pter_list = [1100,1200,1500,1800,2000,2400,2500,3300,3350,3400,4000,4100,4200,4500,5000,5500,5600,5700,5800,6000];
-      var catapult_list = [870,2160,2460];
+      //var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
+      var pter_list = [1400,8000];
+      var catapult_list = [870,2160,2460, 4400, 8340];
       for (var i=0;i<pter_list.length;i++)
       {
         this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
@@ -368,7 +376,7 @@ module.exports = Menu;
       }
       else
       {
-	 if (this.swan.animations.currentAnim.name != "flap")
+	 if (this.swan.animations.currentAnim && this.swan.animations.currentAnim.name != "flap")
          {
            console.log("Flap");
            this.swan.animations.play('flap');
@@ -378,11 +386,11 @@ module.exports = Menu;
       this.pter.callAll('follow',null, this.swan.y);
       if (this.swan.y > 700)
       {
-      this.game.state.start('gameover',true,true);
+      this.game.state.start('gameover');
       }
-      if (this.swan.x > 7000)
+      if (this.swan.x > 10000)
       {
-      this.game.state.start('gameover',true,true);
+      this.game.state.start('gameover');
       }
 
 
@@ -445,7 +453,7 @@ Preload.prototype = {
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
     this.load.image('yeoman', 'assets/yeoman-logo.png');
-    this.load.spritesheet('swan', 'assets/swan.png',45,45);
+    this.load.spritesheet('swan', 'assets/ostrich.png',52,52);
     this.load.spritesheet('pterodactyl', 'assets/pterodactyl.png',60,65);
     this.load.spritesheet('catapult', 'assets/cannon.png',50,60);
     this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
