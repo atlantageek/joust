@@ -13,7 +13,7 @@ Preload.prototype = {
     this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
     this.load.setPreloadSprite(this.asset);
     this.load.image('yeoman', 'assets/yeoman-logo.png');
-    this.load.spritesheet('swan', 'assets/swan.png',45,45);
+    this.load.spritesheet('swan', 'assets/ostrich.png',52,52);
     this.load.spritesheet('pterodactyl', 'assets/pterodactyl.png',60,65);
     this.load.spritesheet('catapult', 'assets/cannon.png',50,60);
     this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);

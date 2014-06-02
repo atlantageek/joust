@@ -7,7 +7,7 @@ var Swan = function(game, x, y, frame) {
   this.anchor.setTo(0.5,0.5);
   this.game.physics.enable(this);
   this.body.gravity.y=300;
-  this.animations.add('flap',[5,6], 8, false);
+  this.animations.add('flap',[5,6,7], 8, false);
   this.animations.add('walk',[0,1,2,3], 10, true);
   this.animations.add('stand',[4], 10, true);
 

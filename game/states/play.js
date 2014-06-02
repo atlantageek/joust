@@ -8,6 +8,13 @@
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
   Play.prototype = {
+    shutdown: function() {
+      this.swan.destroy();
+      this.map.destroy();
+      this.plasma_group.destroy();
+      this.pter.destroy();
+      this.catapult_group.destroy();
+    },
     create: function() {
       
     var style = { font: "25px Arial", fill: "#ff0044", align: "center" };
@@ -33,8 +40,9 @@
       this.pter = this.game.add.group();
       this.game.physics.enable(this.plasma_group);
       this.catapult_group = this.game.add.group();
-      var pter_list = [1100,1200,1500,1800,2000,2400,2500,3300,3350,3400,4000,4100,4200,4500,5000,5500,5600,5700,5800,6000];
-      var catapult_list = [870,2160,2460];
+      //var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
+      var pter_list = [1400,8000];
+      var catapult_list = [870,2160,2460, 4400, 8340];
       for (var i=0;i<pter_list.length;i++)
       {
         this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
@@ -99,7 +107,7 @@
       }
       else
       {
-	 if (this.swan.animations.currentAnim.name != "flap")
+	 if (this.swan.animations.currentAnim && this.swan.animations.currentAnim.name != "flap")
          {
            console.log("Flap");
            this.swan.animations.play('flap');
@@ -109,11 +117,11 @@
       this.pter.callAll('follow',null, this.swan.y);
       if (this.swan.y > 700)
       {
-      this.game.state.start('gameover',true,true);
+      this.game.state.start('gameover');
       }
-      if (this.swan.x > 7000)
+      if (this.swan.x > 10000)
       {
-      this.game.state.start('gameover',true,true);
+      this.game.state.start('gameover');
       }
 
 
