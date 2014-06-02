@@ -40,8 +40,8 @@
       this.pter = this.game.add.group();
       this.game.physics.enable(this.plasma_group);
       this.catapult_group = this.game.add.group();
-      //var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
-      var pter_list = [1400,8000];
+      var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
+      //var pter_list = [1400,8000];
       var catapult_list = [870,2160,2460, 4400, 8340];
       for (var i=0;i<pter_list.length;i++)
       {
