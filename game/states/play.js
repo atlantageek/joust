@@ -58,7 +58,7 @@
       {
         var catapult = new Catapult(this.game, catapult_list[i], 490);
         catapult.events.onAnimationComplete.add(function(target) {
-          var plasma = this.launch_plasma(target.x , target.y);
+          var plasma = this.launch_plasma(target.x - 15 , target.y + 15);
           plasma.catapult = catapult;
           target.frame = 1;
          }, this);
