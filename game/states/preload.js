@@ -19,9 +19,6 @@ Preload.prototype = {
     this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
-    this.game.load.tilemap('cave', 'assets/tilemaps/maps/world.json', null, 
-      Phaser.Tilemap.TILED_JSON);
-    this.game.load.image('tiles', 'assets/tilemaps/tiles/tileset.png');
 
 
     this.load.spritesheet('plasma', 'assets/plasmaball.png', 128, 128);
