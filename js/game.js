@@ -55,8 +55,7 @@ module.exports = Catapult;
 
 var Plasma = function(game, x, y, frame) {
   Phaser.Sprite.call(this, game, x, y, 'plasma', frame);
-  this.animations.add('pulse');
-  this.catapult = nil;
+  this.animations.add('pulse',[0,1,2,3],4,false);
 
   // initialize your prefab here
   
@@ -68,11 +67,15 @@ Plasma.prototype.constructor = Plasma;
 Plasma.prototype.update = function() {
   
   // write your prefab's specific update code here
-  this.play('pulse',true);
-  this.scale.x = 0.2;
-  this.scale.y = 0.2;
+  this.scale.x = 0.3;
+  this.scale.y = 0.3;
+  this.animations.play('pulse', false);
   
 };
+Plasma.prototype.contact = function() {
+  this.animations.play('pulse', false,true);
+   this.destroy();
+}
 
 module.exports = Plasma;
 
@@ -277,6 +280,11 @@ module.exports = Menu;
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
   Play.prototype = {
+    preload: function() {
+    this.game.load.tilemap('cave', 'assets/tilemaps/maps/world.json', null, 
+      Phaser.Tilemap.TILED_JSON);
+    this.load.image('tiles', 'assets/tilemaps/tiles/tileset.png');
+    },
     shutdown: function() {
       this.swan.destroy();
       this.map.destroy();
@@ -309,9 +317,9 @@ module.exports = Menu;
       this.pter = this.game.add.group();
       this.game.physics.enable(this.plasma_group);
       this.catapult_group = this.game.add.group();
-      //var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
-      var pter_list = [1400,8000];
-      var catapult_list = [870,2160,2460, 4400, 8340];
+      var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
+      //var pter_list = [1400,8000];
+      var catapult_list = [870,2160,2460, 4400, 6720,8340];
       for (var i=0;i<pter_list.length;i++)
       {
         this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
@@ -399,16 +407,18 @@ module.exports = Menu;
       swan.flap_energy -= 5;
       pter.body.velocity.x = -100;
     }, 
-    plasma_swan_collide: function(swan, pter) {
+    plasma_swan_collide: function(swan, plasma) {
       swan.flap_energy -= 5;
+      plasma.contact();
     }, 
     launch_plasma: function(x,y)
     {
-      var plasma = this.plasma_group.create(x,y,'plasma');
+      //var plasma = this.plasma_group.create(this.gax,y,'plasma');
+      var plasma = new Plasma(this.game,x,y);
+      this.plasma_group.add(plasma);
+
       this.game.physics.enable(plasma);
     
-      plasma.scale.x=0.1;
-      plasma.scale.y=0.1;
       plasma.lifespan=3000;
       plasma.body.gravity.y=200;
       plasma.body.velocity.x=(this.swan.x-x);
@@ -459,9 +469,6 @@ Preload.prototype = {
     this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
-    this.game.load.tilemap('cave', 'assets/tilemaps/maps/world.json', null, 
-      Phaser.Tilemap.TILED_JSON);
-    this.game.load.image('tiles', 'assets/tilemaps/tiles/tileset.png');
 
 
     this.load.spritesheet('plasma', 'assets/plasmaball.png', 128, 128);
