@@ -249,7 +249,7 @@ GameOver.prototype = {
     this.titleText = this.game.add.text(400,100, 'Game Over!', style);
     this.titleText.anchor.setTo(0.5, 0.5);
 
-    this.congratsText = this.game.add.text(400, 200, 'Score is ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
+    this.congratsText = this.game.add.text(400, 200, 'Distance Travelled: ' + this.game.score, { font: '32px Arial', fill: '#ffffff', align: 'center'});
     this.congratsText.anchor.setTo(0.5, 0.5);
 
     this.instructionText = this.game.add.text(400, 300, 'Want to play Again? Click anywhere.', { font: '16px Arial', fill: '#ffffff', align: 'center'});
@@ -395,7 +395,7 @@ module.exports = Menu;
       
     },
     updateScore: function() {
-      this.game.score = this.game.camera.x;
+      this.game.score = Math.round(this.swan.x/10.0);
     },
     update: function() {
       this.swan.body.velocity.x=40;
@@ -411,7 +411,7 @@ module.exports = Menu;
       this.game.physics.arcade.collide(this.pter, this.layer);
       if (this.swan.flap_energy <= 0)
       {
-      this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
+      this.flap_energy_txt.text = "Energy: Dead!!!  Distance Travelled: " + this.game.score;
       }
       else if (this.swan.body.blocked.down)
       {
@@ -428,7 +428,7 @@ module.exports = Menu;
            this.swan.animations.play('flap');
          }
       }
-      this.flap_energy_txt.text = "Energy: " + this.swan.flap_energy + " Score: " + this.game.score;
+      this.flap_energy_txt.text = "Energy: " + this.swan.flap_energy + " Distance Travelled: " + this.game.score;
       this.pter.callAll('follow',null, this.swan.y);
       if (this.swan.y > 700)
       {
@@ -450,8 +450,7 @@ module.exports = Menu;
       plasma.contact();
     }, 
     energy_star_swan_collide: function(swan, energy_star) {
-console.log("B");
-      swan.flap_energy += 5;
+      swan.flap_energy += 30;
       energy_star.animations.play('used', 5,false,true);
     }, 
     energy_star_swan_check: function(swan, energy_star) {
