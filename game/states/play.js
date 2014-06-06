@@ -2,8 +2,9 @@
   'use strict';
 
   var Swan = require('../prefabs/swan');
-  var  Plasma= require('../prefabs/plasma');
-  var  Catapult= require('../prefabs/catapult');
+  var EnergyStar = require('../prefabs/energy_star');
+  var Plasma= require('../prefabs/plasma');
+  var Catapult= require('../prefabs/catapult');
   
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
@@ -42,23 +43,35 @@
     //Sprites
       this.swan = new Swan(this.game, this.game.width/2, 50);
       this.plasma_group = this.game.add.group();
+      this.energy_star_group = this.game.add.group();
       this.pter = this.game.add.group();
       this.game.physics.enable(this.plasma_group);
+      this.game.physics.enable(this.energy_star_group);
       this.catapult_group = this.game.add.group();
       var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
+      var energy_star_list = [{x:670,y:200},{x:2160,y:200},{x:2460,y:200}, {x:4400,y:200}, {x:6720,y:200},{x:8290,y:200}];
       //var pter_list = [1400,8000];
-      var catapult_list = [870,2160,2460, 4400, 6720,8340];
+      var catapult_list = [870,2160,2460, 4400, 6720,8290];
       for (var i=0;i<pter_list.length;i++)
       {
         this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
         
         //this.pter.animations.play('pterfly');
       }
+      for (var i=0;i<energy_star_list.length;i++)
+      {
+        var star = new EnergyStar(this.game, energy_star_list[i].x, energy_star_list[i].y,0);
+        this.game.physics.enable(star);
+        this.swan.body.setSize(20,20,8,8);
+        star.body.gravity.y=0;
+        this.energy_star_group.add( star);
+        star.animations.play('sitting');
+      }
       for (var i=0;i<catapult_list.length;i++)
       {
         var catapult = new Catapult(this.game, catapult_list[i], 490);
         catapult.events.onAnimationComplete.add(function(target) {
-          var plasma = this.launch_plasma(target.x - 15 , target.y + 15);
+          var plasma = this.launch_plasma(target.x - 10 , target.y );
           plasma.catapult = catapult;
           target.frame = 1;
          }, this);
@@ -70,16 +83,17 @@
       this.game.add.existing(this.pter);
       this.game.add.existing(this.catapult_group);
       this.game.add.existing(this.plasma_group);
+      this.game.add.existing(this.energy_star_group);
       this.swan.body.gravity.y=300;
       this.game.physics.enable(this.swan);
+      this.swan.body.setSize(20,20,8,8);
       //this.game.camera.follow(this.swan);
 
       //Setup Animations
-    this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
-    var space_key = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-    space_key.onDown.add(this.swan.jump, this.swan);
-           this.swan.animations.play('flap');
-
+      this.game.input.onDown.add(function() {
+        console.log("HELP");
+        this.swan.jump();
+       },this);
       
     },
     updateScore: function() {
@@ -87,6 +101,7 @@
     },
     update: function() {
       this.swan.body.velocity.x=40;
+      this.game.physics.arcade.collide(this.swan, this.energy_star_group, this.energy_star_swan_collide, this.energy_star_swan_check);
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
       this.game.physics.arcade.collide(this.swan, this.plasma_group, this.plasma_swan_collide);
       this.game.camera.x = this.swan.x- 200;
@@ -99,14 +114,12 @@
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
-        console.log("dying");
       }
       else if (this.swan.body.blocked.down)
       {
-         this.swan.flap_energy += 1
+         this.swan.flap_energy +=1
 	 if (this.swan.animations.currentAnim.name != "walk")
          {
-           console.log("Walk");
            this.swan.animations.play('walk');
          }
       }
@@ -114,7 +127,6 @@
       {
 	 if (this.swan.animations.currentAnim && this.swan.animations.currentAnim.name != "flap")
          {
-           console.log("Flap");
            this.swan.animations.play('flap');
          }
       }
@@ -132,12 +144,22 @@
 
     },
     pter_swan_collide: function(swan, pter) {
-      swan.flap_energy -= 5;
+      swan.flap_energy -= 20;
       pter.body.velocity.x = -100;
     }, 
     plasma_swan_collide: function(swan, plasma) {
-      swan.flap_energy -= 5;
+      swan.flap_energy -= 20;
       plasma.contact();
+    }, 
+    energy_star_swan_collide: function(swan, energy_star) {
+console.log("B");
+      swan.flap_energy += 5;
+      energy_star.animations.play('used', 5,false,true);
+    }, 
+    energy_star_swan_check: function(swan, energy_star) {
+      if (energy_star.used) {return false;}
+      return true;
+      
     }, 
     launch_plasma: function(x,y)
     {
@@ -149,15 +171,14 @@
     
       plasma.lifespan=3000;
       plasma.body.gravity.y=200;
-      plasma.body.velocity.x=(this.swan.x-x);
-      plasma.body.velocity.y=(this.swan.y-y);
+      plasma.body.velocity.x=(this.swan.x-x) * 1.1;
+      plasma.body.velocity.y=(this.swan.y-y) * 1.1;
       plasma.events.onKilled.add(function() {
       }, plasma);
       return plasma;
     
     },
     swan_layer_collide: function(swan, pter) {
-           console.log(swan.body.blocked);
       if (swan.body.blocked.down)
       {
          swan.flap_energy += 1

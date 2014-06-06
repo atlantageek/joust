@@ -19,6 +19,7 @@ Preload.prototype = {
     this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
+    this.load.spritesheet('energy_star', 'assets/energy_star.png',50,50);
 
 
     this.load.spritesheet('plasma', 'assets/plasmaball.png', 128, 128);

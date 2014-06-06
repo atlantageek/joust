@@ -15,7 +15,7 @@ window.onload = function () {
 
   game.state.start('boot');
 };
-},{"./states/boot":6,"./states/gameover":7,"./states/menu":8,"./states/play":9,"./states/preload":10}],2:[function(require,module,exports){
+},{"./states/boot":7,"./states/gameover":8,"./states/menu":9,"./states/play":10,"./states/preload":11}],2:[function(require,module,exports){
 'use strict';
 
 var Catapult = function(game, x, y, frame) {
@@ -37,7 +37,6 @@ Catapult.prototype.update = function() {
   {
     this.fire();
   }
-  console.log(  " XXX" + (this.x - this.game.camera.x) );
   
   // write your prefab's specific update code here
   
@@ -51,6 +50,34 @@ Catapult.prototype.fire = function() {
 module.exports = Catapult;
 
 },{}],3:[function(require,module,exports){
+'use strict';
+
+var EnergyStar = function(game, x, y, frame) {
+  Phaser.Sprite.call(this, game, x, y, 'energy_star', frame);
+  this.animations.add('sitting',[0,1,2,3], 5, true);
+  this.animations.add('used',[3,4,5], 5, true);
+  this.anchor.setTo(0.5,0.5);
+
+
+  // initialize your prefab here
+  
+};
+
+EnergyStar.prototype = Object.create(Phaser.Sprite.prototype);
+EnergyStar.prototype.constructor = EnergyStar;
+EnergyStar.prototype.used = false;
+
+EnergyStar.prototype.update = function() {
+  this.scale.x = 0.5;
+  this.scale.y = 0.5;
+  
+  // write your prefab's specific update code here
+  
+};
+
+module.exports = EnergyStar;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var Plasma = function(game, x, y, frame) {
@@ -79,7 +106,7 @@ Plasma.prototype.contact = function() {
 
 module.exports = Plasma;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 var Pteradactyl = function(game, x, y, frame) {
@@ -146,7 +173,7 @@ Pteradactyl.prototype.follow = function(target) {
 
 module.exports = Pteradactyl;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var Swan = function(game, x, y, frame) {
@@ -174,7 +201,7 @@ Swan.prototype.jump = function() {
   console.log("Jump");
   this.body.velocity.y=-100;
   this.animations.play('flap');
-  this.flap_energy -= 5;
+  this.flap_energy -= 10;
 }
 Swan.prototype.constructor = Swan;
 
@@ -183,14 +210,13 @@ Swan.prototype.update = function() {
   // write your prefab's specific update code here
       var fade_level = this.flap_energy / 500.0 + 0.25;
       if (fade_level > 1) {fade_level = 1;}
-        console.log("fading");
       this.game.add.tween(this).to( { alpha: fade_level }, 100, Phaser.Easing.Linear.None, true, 0, 1000, true);
   
 };
 
 module.exports = Swan;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 
 'use strict';
 
@@ -209,7 +235,7 @@ Boot.prototype = {
 
 module.exports = Boot;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 
 'use strict';
 function GameOver() {}
@@ -239,7 +265,7 @@ GameOver.prototype = {
 };
 module.exports = GameOver;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 
 'use strict';
 function Menu() {}
@@ -254,7 +280,7 @@ Menu.prototype = {
     this.titleText = this.game.add.text(this.game.world.centerX, 300, 'Joust World', style);
     this.titleText.anchor.setTo(0.5, 0.5);
 
-    this.instructionsText2 = this.game.add.text(this.game.world.centerX, 360, 'Press spacebar to flap. Land on a platform to rest.', { font: '16px Arial', fill: '#ffffff', align: 'center'});
+    this.instructionsText2 = this.game.add.text(this.game.world.centerX, 360, 'Press mousebutton to fly. Land on a platform to restore energy. Or get powerup for energy boost.', { font: '16px Arial', fill: '#ffffff', align: 'center'});
     this.instructionsText2.anchor.setTo(0.5, 0.5);
     this.instructionsText = this.game.add.text(this.game.world.centerX, 400, 'Click anywhere to play ', { font: '16px Arial', fill: '#ffffff', align: 'center'});
     this.instructionsText.anchor.setTo(0.5, 0.5);
@@ -269,13 +295,14 @@ Menu.prototype = {
 
 module.exports = Menu;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 
   'use strict';
 
   var Swan = require('../prefabs/swan');
-  var  Plasma= require('../prefabs/plasma');
-  var  Catapult= require('../prefabs/catapult');
+  var EnergyStar = require('../prefabs/energy_star');
+  var Plasma= require('../prefabs/plasma');
+  var Catapult= require('../prefabs/catapult');
   
   var Pteradactyl = require('../prefabs/pteradactyl');
   function Play() {}
@@ -314,23 +341,35 @@ module.exports = Menu;
     //Sprites
       this.swan = new Swan(this.game, this.game.width/2, 50);
       this.plasma_group = this.game.add.group();
+      this.energy_star_group = this.game.add.group();
       this.pter = this.game.add.group();
       this.game.physics.enable(this.plasma_group);
+      this.game.physics.enable(this.energy_star_group);
       this.catapult_group = this.game.add.group();
       var pter_list = [1100,1500,1800,2400,2500,3300,3400,4000,4100,4500,5000,5500,5800, 8000];
+      var energy_star_list = [{x:670,y:200},{x:2160,y:200},{x:2460,y:200}, {x:4400,y:200}, {x:6720,y:200},{x:8290,y:200}];
       //var pter_list = [1400,8000];
-      var catapult_list = [870,2160,2460, 4400, 6720,8340];
+      var catapult_list = [870,2160,2460, 4400, 6720,8290];
       for (var i=0;i<pter_list.length;i++)
       {
         this.pter.add( new Pteradactyl(this.game, pter_list[i], 30));
         
         //this.pter.animations.play('pterfly');
       }
+      for (var i=0;i<energy_star_list.length;i++)
+      {
+        var star = new EnergyStar(this.game, energy_star_list[i].x, energy_star_list[i].y,0);
+        this.game.physics.enable(star);
+        this.swan.body.setSize(20,20,8,8);
+        star.body.gravity.y=0;
+        this.energy_star_group.add( star);
+        star.animations.play('sitting');
+      }
       for (var i=0;i<catapult_list.length;i++)
       {
         var catapult = new Catapult(this.game, catapult_list[i], 490);
         catapult.events.onAnimationComplete.add(function(target) {
-          var plasma = this.launch_plasma(target.x , target.y);
+          var plasma = this.launch_plasma(target.x - 10 , target.y );
           plasma.catapult = catapult;
           target.frame = 1;
          }, this);
@@ -342,16 +381,17 @@ module.exports = Menu;
       this.game.add.existing(this.pter);
       this.game.add.existing(this.catapult_group);
       this.game.add.existing(this.plasma_group);
+      this.game.add.existing(this.energy_star_group);
       this.swan.body.gravity.y=300;
       this.game.physics.enable(this.swan);
+      this.swan.body.setSize(20,20,8,8);
       //this.game.camera.follow(this.swan);
 
       //Setup Animations
-    this.game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
-    var space_key = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-    space_key.onDown.add(this.swan.jump, this.swan);
-           this.swan.animations.play('flap');
-
+      this.game.input.onDown.add(function() {
+        console.log("HELP");
+        this.swan.jump();
+       },this);
       
     },
     updateScore: function() {
@@ -359,6 +399,7 @@ module.exports = Menu;
     },
     update: function() {
       this.swan.body.velocity.x=40;
+      this.game.physics.arcade.collide(this.swan, this.energy_star_group, this.energy_star_swan_collide, this.energy_star_swan_check);
       this.game.physics.arcade.collide(this.swan, this.pter, this.pter_swan_collide);
       this.game.physics.arcade.collide(this.swan, this.plasma_group, this.plasma_swan_collide);
       this.game.camera.x = this.swan.x- 200;
@@ -371,14 +412,12 @@ module.exports = Menu;
       if (this.swan.flap_energy <= 0)
       {
       this.flap_energy_txt.text = "Energy: Dead!!!  Score: " + this.game.score;
-        console.log("dying");
       }
       else if (this.swan.body.blocked.down)
       {
-         this.swan.flap_energy += 1
+         this.swan.flap_energy +=1
 	 if (this.swan.animations.currentAnim.name != "walk")
          {
-           console.log("Walk");
            this.swan.animations.play('walk');
          }
       }
@@ -386,7 +425,6 @@ module.exports = Menu;
       {
 	 if (this.swan.animations.currentAnim && this.swan.animations.currentAnim.name != "flap")
          {
-           console.log("Flap");
            this.swan.animations.play('flap');
          }
       }
@@ -404,12 +442,22 @@ module.exports = Menu;
 
     },
     pter_swan_collide: function(swan, pter) {
-      swan.flap_energy -= 5;
+      swan.flap_energy -= 20;
       pter.body.velocity.x = -100;
     }, 
     plasma_swan_collide: function(swan, plasma) {
-      swan.flap_energy -= 5;
+      swan.flap_energy -= 20;
       plasma.contact();
+    }, 
+    energy_star_swan_collide: function(swan, energy_star) {
+console.log("B");
+      swan.flap_energy += 5;
+      energy_star.animations.play('used', 5,false,true);
+    }, 
+    energy_star_swan_check: function(swan, energy_star) {
+      if (energy_star.used) {return false;}
+      return true;
+      
     }, 
     launch_plasma: function(x,y)
     {
@@ -421,15 +469,14 @@ module.exports = Menu;
     
       plasma.lifespan=3000;
       plasma.body.gravity.y=200;
-      plasma.body.velocity.x=(this.swan.x-x);
-      plasma.body.velocity.y=(this.swan.y-y);
+      plasma.body.velocity.x=(this.swan.x-x) * 1.1;
+      plasma.body.velocity.y=(this.swan.y-y) * 1.1;
       plasma.events.onKilled.add(function() {
       }, plasma);
       return plasma;
     
     },
     swan_layer_collide: function(swan, pter) {
-           console.log(swan.body.blocked);
       if (swan.body.blocked.down)
       {
          swan.flap_energy += 1
@@ -447,7 +494,7 @@ module.exports = Menu;
   
   module.exports = Play;
 
-},{"../prefabs/catapult":2,"../prefabs/plasma":3,"../prefabs/pteradactyl":4,"../prefabs/swan":5}],10:[function(require,module,exports){
+},{"../prefabs/catapult":2,"../prefabs/energy_star":3,"../prefabs/plasma":4,"../prefabs/pteradactyl":5,"../prefabs/swan":6}],11:[function(require,module,exports){
 
 'use strict';
 function Preload() {
@@ -469,6 +516,7 @@ Preload.prototype = {
     this.load.spritesheet('pterodactyl-short', 'assets/pterodactyl.png',50,45);
     this.load.image('ground', 'assets/ground.png');
     this.load.image('platform', 'assets/platform.png');
+    this.load.spritesheet('energy_star', 'assets/energy_star.png',50,50);
 
 
     this.load.spritesheet('plasma', 'assets/plasmaball.png', 128, 128);

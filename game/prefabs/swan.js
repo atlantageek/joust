@@ -25,7 +25,7 @@ Swan.prototype.jump = function() {
   console.log("Jump");
   this.body.velocity.y=-100;
   this.animations.play('flap');
-  this.flap_energy -= 5;
+  this.flap_energy -= 10;
 }
 Swan.prototype.constructor = Swan;
 
@@ -34,7 +34,6 @@ Swan.prototype.update = function() {
   // write your prefab's specific update code here
       var fade_level = this.flap_energy / 500.0 + 0.25;
       if (fade_level > 1) {fade_level = 1;}
-        console.log("fading");
       this.game.add.tween(this).to( { alpha: fade_level }, 100, Phaser.Easing.Linear.None, true, 0, 1000, true);
   
 };

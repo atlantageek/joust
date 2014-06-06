@@ -19,7 +19,6 @@ Catapult.prototype.update = function() {
   {
     this.fire();
   }
-  console.log(  " XXX" + (this.x - this.game.camera.x) );
   
   // write your prefab's specific update code here
   
